@@ -16,8 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
 
+        // US-101: Compresión GZIP en respuestas
+        $middleware->append(\App\Http\Middleware\CompressResponse::class);
+
         $middleware->alias([
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'auth.cliente' => \App\Http\Middleware\VerifyClienteSession::class,
         ]);
 
         //

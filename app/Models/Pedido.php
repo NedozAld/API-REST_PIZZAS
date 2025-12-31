@@ -16,6 +16,7 @@ class Pedido extends Model
     protected $fillable = [
         'numero_pedido',
         'cliente_id',
+        'cupon_id',
         'subtotal',
         'impuesto',
         'costo_entrega',
@@ -23,10 +24,15 @@ class Pedido extends Model
         'total',
         'estado',
         'notas',
-        'fecha_ticket_enviado',
+        'direccion_entrega',
+        'telefono_contacto',
+        'metodo_pago',
+        'comprobante_pago',
+        'fecha_creacion',
         'fecha_confirmacion',
-        'fecha_confirmacion_whatsapp',
         'fecha_entrega',
+        'fecha_ticket_enviado',
+        'fecha_confirmacion_whatsapp',
         'metodo_confirmacion',
         'whatsapp_message_sid',
         'motivo_cancelacion',
@@ -63,6 +69,11 @@ class Pedido extends Model
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
+    }
+
+    public function cupon()
+    {
+        return $this->belongsTo(Cupon::class, 'cupon_id');
     }
 
     public function detalles()

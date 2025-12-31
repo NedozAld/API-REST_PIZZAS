@@ -46,10 +46,22 @@ class AuthController extends Controller
     /**
      * Login de usuario
      * POST /api/auth/login
+     * US-091: Con rate limiting (3 intentos en 15 minutos)
      */
     public function login(LoginRequest $request): JsonResponse
     {
         $ipAddress = $request->ip();
+        
+        // Verificar si usuario existe y está bloqueado
+        $usuario = \App\Models\Usuario::where('email', $request->email)->first();
+        if ($usuario && $usuario->estaBloqueadoPorFallidos()) {
+            return response()->json([
+                'exito' => false,
+                'mensaje' => 'Cuenta bloqueada. Intenta nuevamente en 1 hora.',
+                'bloqueado_hasta' => $usuario->bloqueado_hasta
+            ], 429);
+        }
+        
         $resultado = $this->authService->autenticar(
             email: $request->email,
             password: $request->password,
@@ -57,7 +69,23 @@ class AuthController extends Controller
         );
 
         if ($resultado['exito']) {
+            // Limpiar intentos fallidos al login exitoso
+            if ($usuario) {
+                $usuario->limpiarIntentosFallidos();
+            }
             return response()->json($resultado, 200);
+        }
+
+        // Registrar intento fallido
+        if ($usuario) {
+            $usuario->registrarIntentoFallido();
+            if ($usuario->estaBloqueadoPorFallidos()) {
+                return response()->json([
+                    'exito' => false,
+                    'mensaje' => 'Demasiados intentos fallidos. Cuenta bloqueada durante 1 hora.',
+                    'bloqueado_hasta' => $usuario->bloqueado_hasta
+                ], 429);
+            }
         }
 
         return response()->json($resultado, 401);
@@ -80,8 +108,15 @@ class AuthController extends Controller
 
         return response()->json([
             'exito' => true,
-            'usuario' => $usuario->makeHidden(['password_hash']),
-            'rol' => $usuario->rol,
+            'usuario' => [
+                'id' => $usuario->id,
+                'nombre' => $usuario->nombre,
+                'email' => $usuario->email,
+                'telefono' => $usuario->telefono,
+                'estado' => $usuario->estado,
+                'dos_fa_habilitado' => $usuario->dos_fa_habilitado,
+                'rol' => $usuario->rol,
+            ],
         ], 200);
     }
 
