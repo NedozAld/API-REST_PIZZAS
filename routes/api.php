@@ -191,8 +191,8 @@ Route::middleware(['auth:sanctum'])->prefix('reportes')->group(function () {
     Route::get('/clientes-top', [ReportesController::class, 'clientesTop'])->name('reportes.clientes-top');
 });
 
-// Alias para dashboard
-Route::middleware(['auth:sanctum'])->get('/dashboard', [ReportesController::class, 'dashboard'])->name('dashboard');
+// Alias para dashboard (nombre único para evitar colisión con web.php)
+Route::middleware(['auth:sanctum'])->get('/dashboard', [ReportesController::class, 'dashboard'])->name('api.dashboard');
 
 // Gestión de Usuarios (Módulo 8 - Fase 3)
 Route::middleware(['auth:sanctum'])->prefix('usuarios')->group(function () {
